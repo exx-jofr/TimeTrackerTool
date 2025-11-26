@@ -38,6 +38,8 @@ fun NavigationBar( onNavigateTo: (String) -> Unit) {
         onNavigateTo("overview")}
         NavItem("Einstellungen", selectedItem) { selectedItem = it
         onNavigateTo("settings")}
+        NavItem("Hilfe", selectedItem) { selectedItem = it
+            onNavigateTo("main")}
     }
 }
 

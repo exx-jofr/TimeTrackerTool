@@ -14,48 +14,55 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.unit.dp
+import kotlinx.coroutines.launch
 import org.exxjofr.timetracker.TimeTable
-import org.exxjofr.timetracker.ViewModel.SettingsViewModel
+import org.exxjofr.timetracker.ViewModel.SettingsModel
+import java.io.File
 
 @Composable
-fun Settings(viewModel: SettingsViewModel, onNavigateTo: (String) -> Unit) {
-    val pathFile by viewModel.pathFile.collectAsState(initial = "")
-    val pathExcel by viewModel.pathExcel.collectAsState(initial = "")
-    val apiKey by viewModel.apiKey.collectAsState(initial = "")
-    val user by viewModel.user.collectAsState(initial = "")
-    var pathCsv = ""
-    var pathExcelVar = ""
-    var apiKeyVar = ""
-    var userVar = ""
+fun Settings(viewModel: SettingsModel, onNavigateTo: (String) -> Unit) {
+    val coroutineScope = rememberCoroutineScope()
 
-    Column (modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    // Werte aus Repo beobachten
+    val pathFile by viewModel.pathFileCsv.collectAsState(initial = "")
+    val pathExcel by viewModel.pathFileExcel.collectAsState(initial = "")
+    val apiKey by viewModel.apiKey.collectAsState(initial = "")
+    val user by viewModel.username.collectAsState(initial = "")
+
+    // Bearbeitbarer State
+    var pathCsv by remember { mutableStateOf(pathFile) }
+    var pathExcelVar by remember { mutableStateOf(pathExcel) }
+    var apiKeyVar by remember { mutableStateOf(apiKey) }
+    var userVar by remember { mutableStateOf(user) }
+
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
         OutlinedTextField(
             value = pathCsv,
             onValueChange = { pathCsv = it },
             label = { Text("CSV-Datei-Pfad") },
             modifier = Modifier.fillMaxWidth()
         )
-
         OutlinedTextField(
             value = pathExcelVar,
             onValueChange = { pathExcelVar = it },
             label = { Text("Excel-Datei-Pfad") },
             modifier = Modifier.fillMaxWidth()
         )
-
         OutlinedTextField(
             value = userVar,
             onValueChange = { userVar = it },
             label = { Text("Jira Benutzer") },
             modifier = Modifier.fillMaxWidth()
         )
-
         OutlinedTextField(
-            value = apiKey,
+            value = apiKeyVar,
             onValueChange = { apiKeyVar = it },
             label = { Text("Dein API-Key") },
             modifier = Modifier.fillMaxWidth(),
-            visualTransformation = PasswordVisualTransformation(), // 👈 hier wird der Text maskiert
+            visualTransformation = PasswordVisualTransformation(),
             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password)
         )
 
@@ -63,23 +70,30 @@ fun Settings(viewModel: SettingsViewModel, onNavigateTo: (String) -> Unit) {
             modifier = Modifier.padding(16.dp),
             onClick = {
                 if (saveUserName(userVar) && saveApiKey(apiKeyVar)) {
-                    viewModel.saveAll(
-                        pathFile = pathCsv,
-                        pathExcel = pathExcelVar,
-                        apiKey = apiKeyVar,
-                        user = userVar
-                    )
+                    SnackbarManager.showMessage("Einstellungen werden gespeichert...")
+                    coroutineScope.launch {
+                        viewModel.saveAll(
+                            pathCsv,
+                            pathExcelVar,
+                            apiKeyVar,
+                            userVar
+                        )
+                        saveCSV(pathCsv)
+                        onNavigateTo("main")
+                    }
                 }
-                saveCSV(pathFile)
-
-                onNavigateTo("main")
             }
         ) {
-
             Text("Speichern")
         }
+        Button(
+            onClick = {
+                File("settings.preferences_pb").delete()
+            }
+        ) {
+            Text("Zurücksetzen der Einstellungen")
+        }
     }
-
 }
 
 private fun saveCSV(pathFile: String) {

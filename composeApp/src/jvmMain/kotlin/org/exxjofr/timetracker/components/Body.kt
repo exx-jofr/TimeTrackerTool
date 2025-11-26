@@ -7,8 +7,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Popup
-import kotlinx.coroutines.launch
 import org.exxjofr.timetracker.Task
 import org.exxjofr.timetracker.TimeTable
 import java.time.Duration
@@ -18,7 +16,7 @@ import java.time.format.DateTimeFormatter
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun Body(timetable: TimeTable) {
+fun Body(timeTable: TimeTable) {
     var vorgangsId by remember { mutableStateOf("") }
     var beschreibung by remember { mutableStateOf("") }
     var startzeit by remember { mutableStateOf("") }
@@ -28,7 +26,7 @@ fun Body(timetable: TimeTable) {
     var expanded by remember { mutableStateOf(false) }
 
     val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
-    val ids by remember { mutableStateOf(timetable.loadingIDs()) }
+    val ids by remember { mutableStateOf(timeTable.loadingIDs()) }
 
 
     fun berechneDauer() {
@@ -64,7 +62,7 @@ fun Body(timetable: TimeTable) {
                 onValueChange = {vorgangsId = it},
                 label = { Text("Vorgangs-ID") },
                 trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.fillMaxWidth().menuAnchor() // Wichtig für Ausrichtung!
+                modifier = Modifier.fillMaxWidth().menuAnchor()
             )
 
             // Das Menü
@@ -149,7 +147,7 @@ fun Body(timetable: TimeTable) {
                     return@Button
                 }
 
-                timetable.addTask(task)
+                timeTable.addTask(task)
                 SnackbarManager.showMessage("Aufgabe hinzugefügt: ${task.id}")
                 resetFields()
             }, modifier = Modifier.fillMaxWidth()

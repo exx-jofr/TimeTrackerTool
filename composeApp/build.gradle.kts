@@ -32,7 +32,6 @@ kotlin {
             implementation("org.apache.logging.log4j:log4j-api:2.25.2")
             implementation("org.apache.logging.log4j:log4j-core:2.25.2")
             implementation("androidx.datastore:datastore-preferences:1.2.0")
-            implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.7.0")
         }
     }
 }

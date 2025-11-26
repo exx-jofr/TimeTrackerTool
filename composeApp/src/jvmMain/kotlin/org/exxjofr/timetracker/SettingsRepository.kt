@@ -1,63 +1,50 @@
 package org.exxjofr.timetracker
 
 import androidx.datastore.core.DataStore
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
-import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.edit
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
+import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.stringPreferencesKey
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.map
-import org.exxjofr.timetracker.repository.SettingsKeys
-import java.io.File
 import java.io.IOException
 
 class SettingsRepository(private val dataStore: DataStore<Preferences>) {
 
-    val pathFile: Flow<String> = dataStore.data
+    val pathFileCsv: Flow<String> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-        .map { prefs -> prefs[SettingsKeys.PATH_FILE] ?: "" }
+        .map { prefs -> prefs[PATH_FILE_CSV] ?: "Unknown" }
 
-    val pathExcel: Flow<String> = dataStore.data
+    val pathFileExcel: Flow<String> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-        .map { prefs -> prefs[SettingsKeys.PATH_EXCEL] ?: "" }
+        .map { prefs -> prefs[PATH_FILE_EXCEL] ?: "Unknown" }
 
     val apiKey: Flow<String> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-        .map { prefs -> prefs[SettingsKeys.API_KEY] ?: "" }
+        .map { prefs -> prefs[API_KEY] ?: "Unknown" }
 
-    val user: Flow<String> = dataStore.data
+    val userName: Flow<String> = dataStore.data
         .catch { e -> if (e is IOException) emit(emptyPreferences()) else throw e }
-        .map { prefs -> prefs[SettingsKeys.USER] ?: "" }
+        .map { prefs -> prefs[USER_NAME] ?: "Unknown" }
 
-    suspend fun savePathFile(value: String) {
-        dataStore.edit { prefs -> prefs[SettingsKeys.PATH_FILE] = value }
+    suspend fun savePathFileCsv(path: String) {
+        dataStore.edit { prefs -> prefs[PATH_FILE_CSV] = path }
     }
-    suspend fun savePathExcel(value: String) {
-        dataStore.edit { prefs -> prefs[SettingsKeys.PATH_EXCEL] = value }
+    suspend fun savePathFileExcel(path: String) {
+        dataStore.edit { prefs -> prefs[PATH_FILE_EXCEL] = path }
     }
-    suspend fun saveApiKey(value: String) {
-        dataStore.edit { prefs -> prefs[SettingsKeys.API_KEY] = value }
+    suspend fun saveApiKey(apiKey: String) {
+        dataStore.edit { prefs -> prefs[API_KEY] = apiKey }
     }
-    suspend fun saveUser(value: String) {
-        dataStore.edit { prefs -> prefs[SettingsKeys.USER] = value }
+    suspend fun saveUserName(userName: String) {
+        dataStore.edit { prefs -> prefs[USER_NAME] = userName }
     }
 
     companion object {
-        private const val DEFAULT_FILENAME = ".timetracker_prefs.preferences_pb"
-
-        fun createDefault(filename: String = DEFAULT_FILENAME): SettingsRepository {
-            val finalName = if (filename.endsWith(".preferences_pb")) filename else "$filename.preferences_pb"
-            val file = File(System.getProperty("user.home"), finalName)
-            file.parentFile?.mkdirs() // sicherstellen, dass das Verzeichnis existiert
-
-            val ds = PreferenceDataStoreFactory.create(
-                scope = CoroutineScope(Dispatchers.IO),
-                produceFile = { file }
-            )
-            return SettingsRepository(ds)
-        }
+        val PATH_FILE_CSV = stringPreferencesKey("path_file_csv")
+        val PATH_FILE_EXCEL = stringPreferencesKey("path_file_excel")
+        val API_KEY = stringPreferencesKey("api_key")
+        val USER_NAME = stringPreferencesKey("user_name")
     }
 }

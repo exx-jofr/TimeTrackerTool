@@ -17,9 +17,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -35,14 +34,15 @@ import androidx.compose.ui.input.key.onPreviewKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.datastore.preferences.core.PreferenceDataStoreFactory
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import org.apache.logging.log4j.LogManager
 import org.exxjofr.timetracker.SettingsRepository
 import org.exxjofr.timetracker.TimeTable
-import org.exxjofr.timetracker.ViewModel.SettingsViewModel
+import org.exxjofr.timetracker.ViewModel.SettingsModel
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import java.io.File
 
 
 private val logger = LogManager.getLogger("App")
@@ -52,8 +52,26 @@ private val logger = LogManager.getLogger("App")
 @Preview
 fun App() {
     var currentScreen by remember { mutableStateOf("main") }
-    val timetable by remember { mutableStateOf(TimeTable("C:\\Users\\jofr\\Downloads\\timetracker_2025.csv")) }
+    var checkedPathCsv by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
+
+    // 🆕 DataStore für Desktop erstellen
+    val dataStore = remember {
+        PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO)) {
+            File("settings.preferences_pb")  // Speicherort
+        }
+    }
+    val settingsRepo = remember { SettingsRepository(dataStore) }
+    val settingsModel = remember { SettingsModel.create(settingsRepo) }
+    val pathCsv by settingsModel.pathFileCsv.collectAsState(initial = "")
+
+    if (pathCsv.isNotEmpty() && pathCsv.contains("jofr")) {
+        checkedPathCsv = true
+    }
+
+    val timeTable by remember(checkedPathCsv, pathCsv) {
+        mutableStateOf(if (checkedPathCsv) TimeTable(pathCsv) else null)
+    }
 
     Scaffold(
         topBar = { SideMenu(
@@ -63,7 +81,7 @@ fun App() {
         snackbarHost = { SnackbarHost(hostState = SnackbarManager.snackbarHostState, modifier = Modifier.width(300
             .dp)) }
     ) {
-        innerPadding ->
+
         MaterialTheme {
             Column(
                 modifier = Modifier
@@ -93,35 +111,26 @@ fun App() {
                 ) {
                     when (currentScreen) {
                         "main" -> {
-                            Body(timetable)
+                            if (checkedPathCsv && timeTable != null) {
+                                Body(timeTable = timeTable!!)
+                            }
                         }
 
                         "settings" -> {
-                            val settingsViewModel: SettingsViewModel = viewModel(
-                                factory = object : ViewModelProvider.Factory {
-                                    override fun <T : ViewModel> create(
-                                        modelClass: kotlin.reflect.KClass<T>,
-                                        extras: androidx.lifecycle.viewmodel.CreationExtras
-                                    ): T {
-                                        if (modelClass.java.isAssignableFrom(SettingsViewModel::class.java)) {
-                                            @Suppress("UNCHECKED_CAST")
-                                            return SettingsViewModel(SettingsRepository.createDefault()) as T
-                                        }
-                                        throw IllegalArgumentException("Unknown ViewModel class: $modelClass")
-                                    }
-                                }
-                            )
                             Settings(
-                                viewModel = settingsViewModel,
+                                viewModel = settingsModel,
                                 onNavigateTo = { newScreen ->
                                     currentScreen = newScreen
                                 }
                             )
                         }
 
-                        "overview" -> TableScreen(
-                            timeTable = timetable
-                        )
+                        "overview" -> {
+                            if (checkedPathCsv && timeTable != null) {
+                                TableScreen(timeTable = timeTable!!)
+                            }
+                        }
+
                     }
                 }
 

@@ -17,8 +17,8 @@ val nowBerlin = ZonedDateTime.now(localZoneId)
 var gTimeOffset = nowBerlin.offset.totalSeconds / 3600
 
 // Jira API-Konfiguration
-const val jiraUser = "email"   // Login-Email
-const val jiraApiKey = "api-key"         // Dein API-Token
+const val jiraUser = "jonas.franke@exxeta.com"   // Login-Email
+const val jiraApiKey = "ATATT3xFfGF0dB8SxpMCiIXSbHskinVSAjboMMkOksvs7tPy6RuYmW9J8cnNZ0foj42jqQeHP9kJgjusqZQ23ZMmnXdvMdz9Cwmzk4jFwl0UJ0bk8n5fdhP-CzKLodT53hH80WYKGHcN51Op0DtjZ9UHwIezDqGTBED6BKoYWGLlGSWuQwvlYQI=0727048C"            // Dein API-Token
 const val jiraBaseUrl = "https://exxeta.atlassian.net/rest/api/3/issue"
 
 // WorklogEntry-Klasse
