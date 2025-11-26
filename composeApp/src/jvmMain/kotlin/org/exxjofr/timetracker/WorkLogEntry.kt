@@ -17,12 +17,10 @@ val nowBerlin = ZonedDateTime.now(localZoneId)
 var gTimeOffset = nowBerlin.offset.totalSeconds / 3600
 
 // Jira API-Konfiguration
-const val jiraUser = "jonas.franke@exxeta.com"   // Login-Email
-const val jiraApiKey = "ATATT3xFfGF0dB8SxpMCiIXSbHskinVSAjboMMkOksvs7tPy6RuYmW9J8cnNZ0foj42jqQeHP9kJgjusqZQ23ZMmnXdvMdz9Cwmzk4jFwl0UJ0bk8n5fdhP-CzKLodT53hH80WYKGHcN51Op0DtjZ9UHwIezDqGTBED6BKoYWGLlGSWuQwvlYQI=0727048C"            // Dein API-Token
 const val jiraBaseUrl = "https://exxeta.atlassian.net/rest/api/3/issue"
 
 // WorklogEntry-Klasse
-class WorkLogEntry() {
+class WorkLogEntry(val apiKey: String, val userName: String) {
     // POST-Request an Jira senden
     fun postWorklog(task: Task) {
         val url = URI.create("$jiraBaseUrl/${task.id}/worklog").toURL()
@@ -34,7 +32,7 @@ class WorkLogEntry() {
             setRequestProperty("Content-Type", "application/json")
 
             // BasicAuth mit API-Key
-            val authString = "$jiraUser:$jiraApiKey"
+            val authString = "$userName:$apiKey"
             val basicAuth = "Basic " + Base64.getEncoder().encodeToString(authString.toByteArray())
             setRequestProperty("Authorization", basicAuth)
         }

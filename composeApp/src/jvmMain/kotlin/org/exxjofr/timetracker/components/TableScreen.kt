@@ -34,7 +34,7 @@ fun RowScope.TableCell(
 }
 
 @Composable
-fun TableScreen(timeTable: TimeTable,) {
+fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKey: String) {
     var date by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
     val columnWeight15 = .15f // 30%
     val columnWeight25 = .25f // 70%
@@ -95,7 +95,7 @@ fun TableScreen(timeTable: TimeTable,) {
                 onClick = {
                     val list = timeTable.getTasksByDate(targetDate = LocalDate.now())
                     val day = BuisnessDay.workDay(list)
-                    val excelWriter = ExcelWriter("C:\\Users\\jofr\\Downloads\\Arbeitszeit.xlsx")
+                    val excelWriter = ExcelWriter(pathExcel)
                     excelWriter.writeDay(day)
                 }
             ) {
@@ -106,7 +106,7 @@ fun TableScreen(timeTable: TimeTable,) {
                 modifier = Modifier.weight(1f),
                 onClick = {
                     val tasks = timeTable.getTasksByDate(targetDate = LocalDate.now())
-                    Jira.upload(tasks)
+                    Jira.upload(tasks, userName= userName, apiKey = apiKey)
                 }) {
                 Text("Heutige Aufgaben in Jira hochladen")
             }

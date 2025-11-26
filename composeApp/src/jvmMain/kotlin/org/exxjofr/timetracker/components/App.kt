@@ -64,6 +64,9 @@ fun App() {
     val settingsRepo = remember { SettingsRepository(dataStore) }
     val settingsModel = remember { SettingsModel.create(settingsRepo) }
     val pathCsv by settingsModel.pathFileCsv.collectAsState(initial = "")
+    val pathExcel by settingsModel.pathFileExcel.collectAsState(initial = "")
+    val apiKey by settingsModel.apiKey.collectAsState(initial = "")
+    val username by settingsModel.username.collectAsState(initial = "")
 
     if (pathCsv.isNotEmpty() && pathCsv.contains("jofr")) {
         checkedPathCsv = true
@@ -127,7 +130,8 @@ fun App() {
 
                         "overview" -> {
                             if (checkedPathCsv && timeTable != null) {
-                                TableScreen(timeTable = timeTable!!)
+                                TableScreen(timeTable = timeTable!!, pathExcel = pathExcel, userName= username,
+                                    apiKey = apiKey)
                             }
                         }
 
