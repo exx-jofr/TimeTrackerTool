@@ -22,7 +22,7 @@ const val jiraBaseUrl = "https://exxeta.atlassian.net/rest/api/3/issue"
 // WorklogEntry-Klasse
 class WorkLogEntry(val apiKey: String, val userName: String) {
     // POST-Request an Jira senden
-    fun postWorklog(task: Task) {
+    fun postWorklog(task: Task): Boolean {
         val url = URI.create("$jiraBaseUrl/${task.id}/worklog").toURL()
         val connection = (url.openConnection() as HttpURLConnection)
             .apply {
@@ -42,14 +42,15 @@ class WorkLogEntry(val apiKey: String, val userName: String) {
         }
 
         val responseCode = connection.responseCode
+        connection.disconnect()
         logger.info("POST Worklog → Response: $responseCode")
         if (responseCode in 200..<300) {
-            logger.info("Worklog sent succesfully to Jira. Task ID: ${task.id}: ${task.desc}")
+            logger.info("Worklog sent successfully to Jira. Task ID: ${task.id}: ${task.desc}")
+            return true
         } else {
             logger.error("Failed to send worklog to Jira. Response Code: $responseCode, Task ID: ${task.id}: ${task.desc}")
+            return false
         }
-
-        connection.disconnect()
     }
 
     private fun getHour(time: String): String {

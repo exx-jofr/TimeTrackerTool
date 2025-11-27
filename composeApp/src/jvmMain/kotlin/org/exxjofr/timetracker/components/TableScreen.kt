@@ -35,18 +35,23 @@ fun RowScope.TableCell(
 
 @Composable
 fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKey: String) {
-    var date by remember { mutableStateOf<LocalDate?>(LocalDate.now()) }
+    var date by remember { mutableStateOf<LocalDate>(LocalDate.now()) }
     val columnWeight15 = .15f // 30%
     val columnWeight25 = .25f // 70%
 
     var tasksForDate = getTasksForDate(timeTable, date)
 
-    Column(modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+    Column(
+        modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(),
+        verticalArrangement = Arrangement.spacedBy(12.dp)
+    ) {
 
         DatePickerFieldToModal(
             modifier = Modifier.fillMaxWidth(),
             pickedDate = { pickedDate ->
-                date = pickedDate
+                pickedDate?.let { pickedDate ->
+                    date = pickedDate
+                }
             }
         )
 
@@ -93,7 +98,7 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    val list = timeTable.getTasksByDate(targetDate = LocalDate.now())
+                    val list = timeTable.getTasksByDate(targetDate = date)
                     val day = BuisnessDay.workDay(list)
                     val excelWriter = ExcelWriter(pathExcel)
                     excelWriter.writeDay(day)
@@ -105,8 +110,9 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
             Button(
                 modifier = Modifier.weight(1f),
                 onClick = {
-                    val tasks = timeTable.getTasksByDate(targetDate = LocalDate.now())
-                    Jira.upload(tasks, userName= userName, apiKey = apiKey)
+                    val tasks = timeTable.getTasksByDate(targetDate = date)
+                    val jiraTasks = Jira.upload(tasks, userName = userName, apiKey = apiKey)
+                    timeTable.updateListOfTasks(oldTasks = tasks, newTasks = jiraTasks)
                 }) {
                 Text("Heutige Aufgaben in Jira hochladen")
             }
@@ -115,11 +121,11 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
 }
 
 
-
 private fun getTasksForDate(timeTable: TimeTable, date: LocalDate?): List<Task> {
     val localDate = try {
         LocalDate.from(date)
     } catch (e: Exception) {
+
         LocalDate.now()
     }
     return timeTable.getTasksByDate(localDate)

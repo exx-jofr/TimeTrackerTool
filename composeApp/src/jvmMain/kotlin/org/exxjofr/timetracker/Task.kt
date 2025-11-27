@@ -7,7 +7,7 @@ import java.time.LocalTime
 
 @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
 data class Task(
-    var date: LocalDate, var id: String, var desc: String, var duration: Duration = Duration.ZERO
+    var date: LocalDate, var id: String, var desc: String, var duration: Duration = Duration.ZERO, var inJira: Boolean = false
 ) {
     init {
         require(id.isNotEmpty()) { "give me a valid id" }
@@ -41,6 +41,10 @@ data class Task(
         this.startTime = LocalTime.parse(start)
         this.endTime = LocalTime.parse(end)
         this.duration = calculateDuration(this.startTime!!, this.endTime!!)
+    }
+
+    fun setIsInJira(inJira: Boolean) {
+        this.inJira = inJira
     }
 
     private fun calculateDuration(start: LocalTime, end: LocalTime): Duration {
@@ -81,8 +85,47 @@ data class Task(
     }
 
     override fun toString(): String {
-        return "${this.date};${this.id};${this.startTime};${this.endTime};${this.duration};${this.desc}"
+        return "${this.date};${this.id};${this.startTime};${this.endTime};${this.duration};${this.desc};${this.inJira}"
     }
 
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
 
+        other as Task
+
+        if (inJira != other.inJira) return false
+        if (date != other.date) return false
+        if (id != other.id) return false
+        if (desc != other.desc) return false
+        if (duration != other.duration) return false
+        if (startTime != other.startTime) return false
+        if (endTime != other.endTime) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = inJira.hashCode()
+        result = 31 * result + date.hashCode()
+        result = 31 * result + id.hashCode()
+        result = 31 * result + desc.hashCode()
+        result = 31 * result + duration.hashCode()
+        result = 31 * result + (startTime?.hashCode() ?: 0)
+        result = 31 * result + (endTime?.hashCode() ?: 0)
+        return result
+    }
+
+    fun copy(): Task {
+        val newTask = Task(
+            date = this.date,
+            id = this.id,
+            desc = this.desc,
+            duration = this.duration,
+            inJira = this.inJira
+        )
+        newTask.startTime = this.startTime
+        newTask.endTime = this.endTime
+        return newTask
+    }
 }

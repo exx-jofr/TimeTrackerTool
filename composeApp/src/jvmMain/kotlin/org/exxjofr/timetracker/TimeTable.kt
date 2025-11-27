@@ -25,6 +25,38 @@ class TimeTable(path: String) {
 
     }
 
+    fun updateTask(oldTask: Task, newTask: Task) {
+        val lines = file.readLines().toMutableList()
+        val oldTaskString = oldTask.toString()
+        val newTaskString = newTask.toString()
+
+        val lineIndex = lines.indexOfFirst { it == oldTaskString }
+        if (lineIndex != -1) {
+            lines[lineIndex] = newTaskString
+            file.writeText(lines.joinToString("\n"))
+            logger.info("Task updated successfully.")
+        } else {
+            logger.error("Old task not found in the file.")
+        }
+    }
+
+    fun updateListOfTasks(oldTasks: List<Task>, newTasks: List<Task>) {
+        val lines = file.readLines().toMutableList()
+        oldTasks.forEachIndexed { index, task ->
+                val oldTaskString = task.toString()
+                val newTaskString = newTasks[index].toString()
+
+                val lineIndex = lines.indexOfFirst { it == oldTaskString }
+                if (lineIndex != -1) {
+                    lines[lineIndex] = newTaskString
+                } else {
+                    logger.error("Old task not found in the file: $oldTaskString")
+                }
+            file.writeText(lines.joinToString("\n"))
+            logger.info("Task updated successfully.")
+        }
+    }
+
     //Date;Vorgangs-ID;Startzeit;Endzeit;Dauer;Beschreibung\
     fun showTaks() {
         try {
@@ -53,7 +85,7 @@ class TimeTable(path: String) {
         val list = mutableListOf<Task>()
         val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-        //"$date;$id;$start;$end;$dauer;$desc
+        //"$date;$id;$start;$end;$dauer;$desc;&inJira
         val matchingLines = this.file.readLines().drop(1)
             .filter { line ->
                 val date = LocalDate.parse(line.split(";")[0], formatter)
@@ -71,7 +103,8 @@ class TimeTable(path: String) {
                 date = LocalDate.parse(p[0], formatter),
                 id = p[1],
                 desc = p[5],
-                duration = Duration.parse(p[4])
+                duration = Duration.parse(p[4]),
+                inJira = p[6].toBooleanStrict()
             )
             currentTask.addTime(p[2], p[3])
             list.add(currentTask)
@@ -110,9 +143,11 @@ class TimeTable(path: String) {
             .forEach { line ->
                 val p = line.split(";")
                 val currentTask = Task(
-                    date = LocalDate.parse(p[0], formatter), id = p[1], desc = p[5],
-                    duration = Duration.parse
-                        (p[4])
+                    date = LocalDate.parse(p[0], formatter),
+                    id = p[1],
+                    desc = p[5],
+                    duration = Duration.parse(p[4]),
+                    inJira = p[6].toBoolean()
                 )
                 currentTask.addTime(p[2], p[3])
                 list.add(currentTask)
@@ -138,7 +173,7 @@ class TimeTable(path: String) {
                 file.parentFile?.mkdirs()
 
                 // Create and write content (creates file if missing)
-                file.writeText("Date;Vorgangs-ID;Startzeit;Endzeit;Dauer;Beschreibung\n")
+                file.writeText("Date;Vorgangs-ID;Startzeit;Endzeit;Dauer;Beschreibung;InJira\n")
                 logger.info("File created at: ${file.absolutePath}")
 
             } catch (e: IOException) {
