@@ -114,9 +114,9 @@ fun TrayPopupWindow(onClose: () -> Unit) {
                     timeEnd = roundUpTime(LocalTime.now()).format(timeFormatter)
                     logger.info("Task $id paused at $timeEnd")
                     val task = Task(
-                        date = LocalDate.now(),
-                        id = id,
-                        desc = description
+                        initialDate = LocalDate.now(),
+                        initialId = id,
+                        initialDesc = description
                     )
                     task.addTime(timeStart, timeEnd)
                     logger.info("Task $id added at $timeStart to $timeEnd")

@@ -28,7 +28,6 @@ fun Body(timeTable: TimeTable) {
     val timeFormatter: DateTimeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val ids by remember { mutableStateOf(timeTable.loadingIDs()) }
 
-
     fun berechneDauer() {
         try {
             val start = LocalTime.parse(startzeit, timeFormatter)
@@ -139,7 +138,7 @@ fun Body(timeTable: TimeTable) {
                 var task: Task? = null
                 try {
                     task = Task(
-                        date = LocalDate.parse(date), id = vorgangsId, desc = beschreibung
+                        initialDate = LocalDate.parse(date), initialId = vorgangsId, initialDesc = beschreibung
                     )
                     task.addTime(startzeit, endzeit)
                 } catch (e: Exception) {

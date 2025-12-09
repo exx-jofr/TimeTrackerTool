@@ -88,7 +88,7 @@ class TimeTable(path: String) {
         //"$date;$id;$start;$end;$dauer;$desc;&inJira
         val matchingLines = this.file.readLines().drop(1)
             .filter { line ->
-                val date = LocalDate.parse(line.split(";")[0], formatter)
+                val date = LocalDate.parse(line.split(";")[1], formatter)
                 date.isEqual(targetDate)
             }
 
@@ -100,13 +100,14 @@ class TimeTable(path: String) {
         matchingLines.forEach { line ->
             val p = line.split(";")
             val currentTask = Task(
-                date = LocalDate.parse(p[0], formatter),
-                id = p[1],
-                desc = p[5],
-                duration = Duration.parse(p[4]),
-                inJira = p[6].toBooleanStrict()
+                uid = p[0],
+                initialDate = LocalDate.parse(p[1], formatter),
+                initialId = p[2],
+                initialDesc = p[6],
+                initialDuration = Duration.parse(p[5]),
+                initialInJira = p[7].toBooleanStrict()
             )
-            currentTask.addTime(p[2], p[3])
+            currentTask.addTime(p[3], p[4])
             list.add(currentTask)
         }
 
@@ -143,13 +144,14 @@ class TimeTable(path: String) {
             .forEach { line ->
                 val p = line.split(";")
                 val currentTask = Task(
-                    date = LocalDate.parse(p[0], formatter),
-                    id = p[1],
-                    desc = p[5],
-                    duration = Duration.parse(p[4]),
-                    inJira = p[6].toBoolean()
+                    uid = p[0],
+                    initialDate = LocalDate.parse(p[1], formatter),
+                    initialId = p[2],
+                    initialDesc = p[6],
+                    initialDuration = Duration.parse(p[5]),
+                    initialInJira = p[7].toBoolean()
                 )
-                currentTask.addTime(p[2], p[3])
+                currentTask.addTime(p[3], p[4])
                 list.add(currentTask)
             }
         return list

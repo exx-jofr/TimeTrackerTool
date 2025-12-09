@@ -1,14 +1,33 @@
 package org.exxjofr.timetracker
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
+import java.util.UUID
 
 
 @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
 data class Task(
-    var date: LocalDate, var id: String, var desc: String, var duration: Duration = Duration.ZERO, var inJira: Boolean = false
+    val uid: String = UUID.randomUUID().toString(),
+    val initialDate: LocalDate,
+    val initialId: String,
+    val initialDesc: String,
+    val initialDuration: Duration = Duration.ZERO,
+    val initialInJira: Boolean = false
 ) {
+
+    var date by mutableStateOf(initialDate)
+    var id by mutableStateOf(initialId)
+    var desc by mutableStateOf(initialDesc)
+    var duration by mutableStateOf(initialDuration)
+    var inJira by mutableStateOf(initialInJira)
+
+    var startTime by mutableStateOf<LocalTime?>(null)
+    var endTime by mutableStateOf<LocalTime?>(null)
+
     init {
         require(id.isNotEmpty()) { "give me a valid id" }
         require(!id.contains(";")) { "id must not contain semicolon" }
@@ -22,9 +41,6 @@ data class Task(
         require(date.dayOfMonth in 1..31) { "Day must be between 1 to 31" }
         require(duration >= Duration.ZERO) { "Duration must be positive" }
     }
-
-    var startTime: LocalTime? = null
-    var endTime: LocalTime? = null
 
     fun addTime(start: LocalTime, end: LocalTime) {
         this.startTime = start
@@ -118,11 +134,11 @@ data class Task(
 
     fun copy(): Task {
         val newTask = Task(
-            date = this.date,
-            id = this.id,
-            desc = this.desc,
-            duration = this.duration,
-            inJira = this.inJira
+            initialDate = this.date,
+            initialId = this.id,
+            initialDesc = this.desc,
+            initialDuration = this.duration,
+            initialInJira = this.inJira
         )
         newTask.startTime = this.startTime
         newTask.endTime = this.endTime
