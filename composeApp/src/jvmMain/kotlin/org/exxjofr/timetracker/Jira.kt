@@ -2,7 +2,7 @@ package org.exxjofr.timetracker
 
 class Jira {
     companion object {
-        fun upload(tasks: MutableList<Task>, apiKey:String, userName:String): List<Task> {
+        fun upload(tasks: List<Task>, apiKey:String, userName:String): List<Task> {
             val jiraTasks = mutableListOf<Task>()
             val workLogEntry = WorkLogEntry(userName = userName, apiKey=apiKey)
             tasks.forEach { task ->

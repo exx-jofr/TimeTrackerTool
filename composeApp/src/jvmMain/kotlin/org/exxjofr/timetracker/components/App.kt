@@ -2,73 +2,42 @@ package org.exxjofr.timetracker.components
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.safeContentPadding
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
-import androidx.compose.ui.input.key.Key
-import androidx.compose.ui.input.key.KeyEventType
-import androidx.compose.ui.input.key.isShiftPressed
-import androidx.compose.ui.input.key.key
-import androidx.compose.ui.input.key.onPreviewKeyEvent
-import androidx.compose.ui.input.key.type
+import androidx.compose.ui.input.key.*
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
-import androidx.datastore.preferences.core.PreferenceDataStoreFactory
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
 import org.apache.logging.log4j.LogManager
-import org.exxjofr.timetracker.SettingsRepository
 import org.exxjofr.timetracker.TimeTable
 import org.exxjofr.timetracker.ViewModel.SettingsModel
-import org.jetbrains.compose.ui.tooling.preview.Preview
-import java.io.File
 
 
 private val logger = LogManager.getLogger("App")
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-@Preview
-fun App() {
+fun App(model: SettingsModel) {
     var currentScreen by remember { mutableStateOf("main") }
     var checkedPathCsv by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     // 🆕 DataStore für Desktop erstellen
-    val dataStore = remember {
-        PreferenceDataStoreFactory.create(scope = CoroutineScope(Dispatchers.IO)) {
-            File("settings.preferences_pb")  // Speicherort
-        }
-    }
-    val settingsRepo = remember { SettingsRepository(dataStore) }
-    val settingsModel = remember { SettingsModel.create(settingsRepo) }
-    val pathCsv by settingsModel.pathFileCsv.collectAsState(initial = "")
-    val pathExcel by settingsModel.pathFileExcel.collectAsState(initial = "")
-    val apiKey by settingsModel.apiKey.collectAsState(initial = "")
-    val username by settingsModel.username.collectAsState(initial = "")
 
-    if (pathCsv.isNotEmpty() && pathCsv.contains("jofr")) {
+    val pathCsv by model.pathFileCsv.collectAsState(initial = "")
+    val pathExcel by model.pathFileExcel.collectAsState(initial = "")
+    val username by model.username.collectAsState(initial = "")
+    val apiKey by model.apiKey.collectAsState(initial = "")
+
+    if (pathCsv.isNotEmpty()) {
         checkedPathCsv = true
     }
 
@@ -121,7 +90,7 @@ fun App() {
 
                         "settings" -> {
                             Settings(
-                                viewModel = settingsModel,
+                                viewModel = model,
                                 onNavigateTo = { newScreen ->
                                     currentScreen = newScreen
                                 }
@@ -135,6 +104,9 @@ fun App() {
                             }
                         }
 
+                        "help" -> {
+                            Help()
+                        }
                     }
                 }
 

@@ -66,7 +66,7 @@ fun Body(timeTable: TimeTable) {
 
             // Das Menü
             ExposedDropdownMenu(
-                expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.height(50.dp),
+                expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.height(100.dp),
             ) {
                 ids.forEach { label ->
                     DropdownMenuItem(text = { Text(label, textAlign = TextAlign.Center) }, onClick = {

@@ -12,6 +12,7 @@ import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
 import androidx.compose.material.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -21,14 +22,13 @@ import androidx.compose.ui.unit.dp
 import org.apache.logging.log4j.LogManager
 import org.exxjofr.timetracker.Task
 import org.exxjofr.timetracker.TimeTable
+import org.exxjofr.timetracker.ViewModel.SettingsModel
 import java.awt.MenuItem
 import java.awt.PopupMenu
 import java.awt.SystemTray
 import java.awt.TrayIcon
-import java.awt.event.ActionListener
 import java.io.File
 import java.time.LocalDate
-import java.time.LocalDateTime
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import javax.imageio.ImageIO
@@ -73,9 +73,9 @@ fun setupSystemTray(onTrayClick: () -> Unit) {
         popup.add(exitItem)
         val trayIcon = TrayIcon(image, "TimeTracker", popup)
         trayIcon.isImageAutoSize = true
-        trayIcon.addActionListener(ActionListener {
+        trayIcon.addActionListener {
             onTrayClick()
-        })
+        }
         tray.add(trayIcon)
         trayIconInstance = trayIcon
     } catch (e: Exception) {
@@ -84,14 +84,17 @@ fun setupSystemTray(onTrayClick: () -> Unit) {
 }
 
 @Composable
-fun TrayPopupWindow(onClose: () -> Unit) {
+fun TrayPopupWindow(model: SettingsModel, onClose: () -> Unit) {
     MaterialTheme {
-        val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
         var id by remember { mutableStateOf("") }
         var description by remember { mutableStateOf("") }
         var timeStart by remember { mutableStateOf("") }
         var timeEnd by remember { mutableStateOf("") }
-        val timetable by remember { mutableStateOf(TimeTable("C:\\Users\\jofr\\Downloads\\timetracker_2025.csv")) }
+
+        val pathCsv by model.pathFileCsv.collectAsState(initial = "")
+        val timeTable by remember( pathCsv) {
+            mutableStateOf(if (pathCsv.isNotEmpty()) TimeTable(pathCsv) else null)
+        }
 
         Column(
             modifier = Modifier.padding(16.dp).width(250.dp)
@@ -105,13 +108,13 @@ fun TrayPopupWindow(onClose: () -> Unit) {
             Spacer(Modifier.height(16.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 Button(onClick = {
-                    timeStart =  roundDownTime(LocalTime.now()).format(timeFormatter)
+                    timeStart =  roundDownTime(LocalTime.now()).format(DateTimeFormatter.ofPattern("HH:mm"))
                     logger.info("Task $id started at $timeStart")
-                }) {
+                }, enabled = (timeTable != null)) {
                     Text("Start")
                 }
                 Button(onClick = {
-                    timeEnd = roundUpTime(LocalTime.now()).format(timeFormatter)
+                    timeEnd = roundUpTime(LocalTime.now()).format(DateTimeFormatter.ofPattern("HH:mm"))
                     logger.info("Task $id paused at $timeEnd")
                     val task = Task(
                         initialDate = LocalDate.now(),
@@ -120,11 +123,11 @@ fun TrayPopupWindow(onClose: () -> Unit) {
                     )
                     task.addTime(timeStart, timeEnd)
                     logger.info("Task $id added at $timeStart to $timeEnd")
-                    timetable.addTask(task)
-                }) {
-                    Text("Pause")
+                    timeTable?.addTask(task)
+                }, enabled = (timeTable != null)) {
+                    Text("Ende")
                 }
-                Button(onClick = { onClose() }) {
+                Button(onClick = { onClose() }, enabled = (timeTable != null) ) {
                     Text("Close")
                 }
             }
@@ -133,14 +136,12 @@ fun TrayPopupWindow(onClose: () -> Unit) {
 }
 
 private fun roundDownTime(time: LocalTime): LocalTime {
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val minutes = time.minute
     val roundedMinutes = (minutes / 15) * 15 // Abrunden auf vorherige Viertelstunde
     return LocalTime.of(time.hour, roundedMinutes)
 }
 
 private fun roundUpTime(time: LocalTime): LocalTime {
-    val timeFormatter = DateTimeFormatter.ofPattern("HH:mm")
     val minutes = time.minute
     var roundedMinutes = ((minutes + 14) / 15) * 15 // +14 bewirkt Aufrunden
 

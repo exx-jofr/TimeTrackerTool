@@ -39,7 +39,7 @@ fun NavigationBar( onNavigateTo: (String) -> Unit) {
         NavItem("Einstellungen", selectedItem) { selectedItem = it
         onNavigateTo("settings")}
         NavItem("Hilfe", selectedItem) { selectedItem = it
-            onNavigateTo("main")}
+            onNavigateTo("help")}
     }
 }
 

@@ -42,9 +42,15 @@ compose.desktop {
         mainClass = "org.exxjofr.timetracker.MainKt"
 
         nativeDistributions {
-            targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
-            packageName = "org.exxjofr.timetracker"
+            targetFormats(TargetFormat.Msi, TargetFormat.Exe)
+            packageName = "TimeTracker"
             packageVersion = "1.0.0"
+
+            windows {
+                menuGroup = "TimeTracker"
+                dirChooser = true
+                perUserInstall = true
+            }
         }
     }
 }

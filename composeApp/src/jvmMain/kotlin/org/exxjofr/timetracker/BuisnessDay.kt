@@ -16,9 +16,9 @@ class BuisnessDay(
 
 
     companion object {
-        fun workDay(tasksForADay: MutableList<Task>): BuisnessDay {
-            var sortedTasks =
-                tasksForADay.sortedWith(compareBy<Task> { it.date }.thenBy { it.startTime }).toMutableList()
+        fun workDay(tasksForADay: List<Task>): BuisnessDay {
+            val sortedTasks =
+                tasksForADay.sortedWith(compareBy<Task> { it.date }.thenBy { it.startTime })
             if (!tasksForADay.first().date.isEqual(tasksForADay.last().date)) {
                 println("Tasks are not from the same day!")
                 return BuisnessDay(LocalDate.now(), LocalTime.of(0, 0), LocalTime.of(0, 0), Duration.ZERO)

@@ -44,15 +44,12 @@ fun RowScope.TableCell(
 @Composable
 fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKey: String) {
     var date by remember { mutableStateOf<LocalDate>(LocalDate.now()) }
-    val columnWeight15 = .15f // 30%
-    val columnWeight25 = .25f // 70%
-    var isEditing by mutableStateOf(false)
+    val columnWeight15 = .15f // 15%
+    val columnWeight25 = .25f // 25%
+    var isEditing by remember { mutableStateOf(false) }
+    var refreshKey by remember { mutableStateOf(0) } // Refresh-Trigger
 
-    var tasksForDate by remember { mutableStateOf(emptyList<Task>()) }
-
-    LaunchedEffect(date) {
-        tasksForDate = getTasksForDate(timeTable, date)
-    }
+    var tasksForDate by remember(refreshKey, date) { mutableStateOf( getTasksForDate(timeTable, date)) }
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(),
@@ -80,10 +77,19 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
             Spacer(modifier = Modifier.width(8.dp))
             if (isEditing) {
                 Button(
-                    onClick = {timeTable.updateListOfTasks()}
+                    onClick = { timeTable.updateTasks(tasksForDate) },
                 ) {
-                    Text("Aktualisieren")
+                    Text("Änderungen speichern")
                 }
+            }
+            Spacer(modifier = Modifier.width(8.dp))
+            Button(
+                onClick = {
+                    timeTable.reload()
+                    refreshKey++
+                },
+            ) {
+                Text("Tabelle aktualisieren")
             }
         }
 
@@ -107,17 +113,19 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
                 }
             }
             // Here are all the lines of your table.
-            items(tasksForDate, key = { it.uid }) { task ->
+            items(tasksForDate, key = { it.uuid }) { task ->
                 Row(Modifier.height(56.dp).fillMaxWidth()) {
                     if (isEditing) {
                         EditableTableCell(
                             value = task.date.toString(),
                             modifier = Modifier.weight(columnWeight15),
-                            onValueChange = { newValue -> parseDate(newValue).let { t ->
-                                if (t != null) {
-                                    task.date = t
+                            onValueChange = { newValue ->
+                                parseDate(newValue).let { t ->
+                                    if (t != null) {
+                                        task.date = t
+                                    }
                                 }
-                            } }
+                            }
                         )
                         EditableTableCell(
                             value = task.id,
@@ -127,29 +135,35 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
                         EditableTableCell(
                             value = task.startTime.toString(),
                             modifier = Modifier.weight(columnWeight15),
-                            onValueChange = { newValue -> parseTime(newValue).let { t ->
-                                if (t != null) {
-                                    task.startTime = t
+                            onValueChange = { newValue ->
+                                parseTime(newValue).let { t ->
+                                    if (t != null) {
+                                        task.startTime = t
+                                    }
                                 }
-                            } }
+                            }
                         )
                         EditableTableCell(
                             value = task.endTime.toString(),
                             modifier = Modifier.weight(columnWeight15),
-                            onValueChange = { newValue -> parseTime(newValue).let { t ->
-                                if (t != null) {
-                                    task.endTime = t
+                            onValueChange = { newValue ->
+                                parseTime(newValue).let { t ->
+                                    if (t != null) {
+                                        task.endTime = t
+                                    }
                                 }
-                            } }
+                            }
                         )
                         EditableTableCell(
                             value = durationToHHmm(task.duration),
                             modifier = Modifier.weight(columnWeight15),
-                            onValueChange = { newValue -> parseDuration(newValue).let { t ->
-                                if (t != null) {
-                                    task.duration = t
+                            onValueChange = { newValue ->
+                                parseDuration(newValue).let { t ->
+                                    if (t != null) {
+                                        task.duration = t
+                                    }
                                 }
-                            } }
+                            }
                         )
                         EditableTableCell(
                             value = task.desc,
@@ -194,7 +208,7 @@ fun TableScreen(timeTable: TimeTable, pathExcel: String, userName: String, apiKe
                 onClick = {
                     val tasks = timeTable.getTasksByDate(targetDate = date)
                     val jiraTasks = Jira.upload(tasks, userName = userName, apiKey = apiKey)
-                    timeTable.updateListOfTasks(oldTasks = tasks, newTasks = jiraTasks)
+                    timeTable.updateTasks(newTasks = jiraTasks)
                 }) {
                 Text("Heutige Aufgaben in Jira hochladen")
             }
@@ -225,7 +239,7 @@ fun EditableTableCell(
 private fun getTasksForDate(timeTable: TimeTable, date: LocalDate?): List<Task> {
     val localDate = try {
         LocalDate.from(date)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
 
         LocalDate.now()
     }
@@ -237,7 +251,7 @@ private fun parseDate(dateString: String): LocalDate? {
 
     return try {
         LocalDate.parse(dateString, formatter)
-    } catch (e: DateTimeParseException) {
+    } catch (_: DateTimeParseException) {
         null
     }
 }
@@ -247,7 +261,7 @@ private fun parseTime(timeString: String): LocalTime? {
 
     return try {
         LocalTime.parse(timeString, formatter)
-    } catch (e: DateTimeParseException) {
+    } catch (_: DateTimeParseException) {
         null
     }
 }
@@ -255,7 +269,7 @@ private fun parseTime(timeString: String): LocalTime? {
 private fun parseDuration(durationString: String): Duration? {
     return try {
         Duration.parse(durationString)
-    } catch (e: Exception) {
+    } catch (_: Exception) {
         null
     }
 }
@@ -264,20 +278,4 @@ fun durationToHHmm(duration: Duration): String {
     val hours = duration.toHours()
     val minutes = duration.minusHours(hours).toMinutes()
     return String.format("%02d:%02d", hours, minutes)
-}
-
-
-fun hhmmToDuration(time: String): Duration {
-    val parts = time.split(":")
-    require(parts.size == 2) { "Ungültiges Format, erwartet HH:mm" }
-
-    val hours = parts[0].toLongOrNull()
-        ?: throw IllegalArgumentException("Ungültige Stunden: ${parts[0]}")
-    val minutes = parts[1].toLongOrNull()
-        ?: throw IllegalArgumentException("Ungültige Minuten: ${parts[1]}")
-
-    require(hours >= 0) { "Stunden müssen >= 0 sein" }
-    require(minutes in 0..59) { "Minuten müssen zwischen 0 und 59 liegen" }
-
-    return Duration.ofHours(hours).plusMinutes(minutes)
 }

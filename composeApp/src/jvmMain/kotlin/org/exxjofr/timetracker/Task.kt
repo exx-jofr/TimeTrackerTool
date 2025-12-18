@@ -11,7 +11,7 @@ import java.util.UUID
 
 @Suppress("IDENTITY_SENSITIVE_OPERATIONS_WITH_VALUE_TYPE")
 data class Task(
-    val uid: String = UUID.randomUUID().toString(),
+    val uuid: String = UUID.randomUUID().toString(),
     val initialDate: LocalDate,
     val initialId: String,
     val initialDesc: String,
@@ -101,7 +101,8 @@ data class Task(
     }
 
     override fun toString(): String {
-        return "${this.date};${this.id};${this.startTime};${this.endTime};${this.duration};${this.desc};${this.inJira}"
+        return "${this.uuid};${this.date};${this.id};${this.startTime};${this.endTime};${this.duration};${this.desc};" +
+                "${this.inJira}"
     }
 
     override fun equals(other: Any?): Boolean {
@@ -110,6 +111,7 @@ data class Task(
 
         other as Task
 
+        if (uuid != other.uuid) return false
         if (inJira != other.inJira) return false
         if (date != other.date) return false
         if (id != other.id) return false
@@ -123,6 +125,7 @@ data class Task(
 
     override fun hashCode(): Int {
         var result = inJira.hashCode()
+        result = 31 * result + uuid.hashCode()
         result = 31 * result + date.hashCode()
         result = 31 * result + id.hashCode()
         result = 31 * result + desc.hashCode()
@@ -134,6 +137,7 @@ data class Task(
 
     fun copy(): Task {
         val newTask = Task(
+            uuid = this.uuid,
             initialDate = this.date,
             initialId = this.id,
             initialDesc = this.desc,
@@ -143,5 +147,35 @@ data class Task(
         newTask.startTime = this.startTime
         newTask.endTime = this.endTime
         return newTask
+    }
+
+    companion object {
+        fun createTaskFromString(taskString: String): Task {
+            val parts = taskString.split(";")
+            require(parts.size >= 8) { "Invalid task string format" }
+
+            val uuid = parts[0]
+            val date = LocalDate.parse(parts[1])
+            val id = parts[2]
+            val startTime = if (parts[3] != "null") LocalTime.parse(parts[3]) else null
+            val endTime = if (parts[4] != "null") LocalTime.parse(parts[4]) else null
+            val duration = Duration.parse(parts[5])
+            val desc = parts[6]
+            val inJira = parts[7].toBoolean()
+
+            val task = Task(
+                uuid = uuid,
+                initialDate = date,
+                initialId = id,
+                initialDesc = desc,
+                initialDuration = duration,
+                initialInJira = inJira
+            )
+            if (startTime != null && endTime != null) {
+                task.startTime = startTime
+                task.endTime = endTime
+            }
+            return task
+        }
     }
 }
