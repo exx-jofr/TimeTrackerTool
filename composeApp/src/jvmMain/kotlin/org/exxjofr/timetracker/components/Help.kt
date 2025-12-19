@@ -16,13 +16,6 @@ fun Help() {
             .fillMaxWidth()
             .padding(16.dp)
     ) {
-        // Titel
-        Text(
-            text = "Guide & Hilfe",
-            style = MaterialTheme.typography.headlineLarge,
-            modifier = Modifier.padding(bottom = 24.dp)
-        )
-
         // Abschnitt 1: Einrichtung
         HelpSection(
             title = "1. Einrichtung",
@@ -68,17 +61,11 @@ A: Die CSV-Datei hat folgende Spalten:
 
 F: Warum wird die UUID nicht überprüft nach Duplikaten?
 A: Die Wahrscheinlichkeit, dass zwei identische UUIDs generiert werden, ist extrem gering. 
-   Es ist etwa 7 Milliarden Mal wahrscheinlicher, den Lotto-Jackpot in Deutschland zu gewinnen, als dass bei einer Milliarde generierter UUIDs eine zufällige Kollision auftritt.
+   Es ist etwa 7 Milliarden Mal wahrscheinlicher, den Lotto-Jackpot in Deutschland zu gewinnen, 
+   als dass bei einer Milliarde generierter UUIDs eine zufällige Kollision auftritt.
 
 F: Wird überprüft ob Jira Vorgänge sich überlappen?
 A: Nein, man ist dafür verantwortlich, dass die Zeiten sich nicht überschneiden.
-
-F: Kann ich mehrere Projekte verwalten?
-A: Absolut! Erstelle verschiedene Kategorien und nutze Tags zur besseren Organisation 
-   deiner Projekte.
-
-F: Gibt es eine mobile Version?
-A: Aktuell ist nur die Desktop-Version verfügbar. Eine mobile Version ist geplant.
             """.trimIndent()
         )
 
@@ -138,7 +125,9 @@ private fun HelpSection(title: String, content: String) {
         HorizontalDivider(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(bottom = 12.dp), thickness = DividerDefaults.Thickness, color = MaterialTheme.colorScheme.outline
+                .padding(bottom = 12.dp),
+            thickness = DividerDefaults.Thickness,
+            color = MaterialTheme.colorScheme.outline
         )
 
         // Inhalt
