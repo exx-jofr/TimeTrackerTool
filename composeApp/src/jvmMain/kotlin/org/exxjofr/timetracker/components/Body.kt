@@ -17,11 +17,11 @@ import java.time.format.DateTimeFormatter
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun Body(timeTable: TimeTable) {
-    var vorgangsId by remember { mutableStateOf("") }
-    var beschreibung by remember { mutableStateOf("") }
-    var startzeit by remember { mutableStateOf("") }
-    var endzeit by remember { mutableStateOf("") }
-    var dauer by remember { mutableStateOf("") }
+    var initialJiraID by remember { mutableStateOf("") }
+    var initialDesc by remember { mutableStateOf("") }
+    var initialStart by remember { mutableStateOf("") }
+    var initialEnd by remember { mutableStateOf("") }
+    var duration by remember { mutableStateOf("") }
     var date by remember { mutableStateOf(LocalDate.now().toString()) }
     var expanded by remember { mutableStateOf(false) }
 
@@ -30,58 +30,67 @@ fun Body(timeTable: TimeTable) {
 
     fun berechneDauer() {
         try {
-            val start = LocalTime.parse(startzeit, timeFormatter)
-            val ende = LocalTime.parse(endzeit, timeFormatter)
-            val diff = Duration.between(start, ende)
-            dauer = "${diff.toHours()}h ${diff.toMinutesPart()}min"
-        } catch (e: Exception) {
-            dauer = "Ungültige Zeitangabe"
-            println("Fehler bei der Dauerberechnung: $e")
+            val start = LocalTime.parse(initialStart, timeFormatter)
+            val end = LocalTime.parse(initialEnd, timeFormatter)
+            val diff = Duration.between(start, end)
+            duration = "${diff.toHours()}h ${diff.toMinutesPart()}min"
+        } catch (_: Exception) {
+            duration = ""
         }
     }
 
     fun resetFields() {
-        vorgangsId = ""
+        initialJiraID = ""
         date = ""
-        beschreibung = ""
-        startzeit = ""
-        endzeit = ""
-        dauer = ""
+        initialDesc = ""
+        initialStart = ""
+        initialEnd = ""
+        duration = ""
     }
 
     Column(
         modifier = Modifier.fillMaxWidth().padding(16.dp).focusable(), verticalArrangement = Arrangement.spacedBy(12.dp)
     ) {
 
-        ExposedDropdownMenuBox(
-            expanded = expanded, onExpandedChange = { expanded = !expanded }) {
-            // Das "integrierte" Dropdown-Textfeld
-            OutlinedTextField(
-                value = vorgangsId,
-                onValueChange = {vorgangsId = it},
-                label = { Text("Vorgangs-ID") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier.fillMaxWidth().menuAnchor()
-            )
+        if (ids.isNotEmpty()) {
+            ExposedDropdownMenuBox(
+                expanded = expanded, onExpandedChange = { expanded = !expanded }) {
+                // Das "integrierte" Dropdown-Textfeld
+                OutlinedTextField(
+                    value = initialJiraID,
+                    onValueChange = {initialJiraID = it},
+                    label = { Text("Vorgangs-ID") },
+                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                    modifier = Modifier.fillMaxWidth().menuAnchor()
+                )
 
-            // Das Menü
-            ExposedDropdownMenu(
-                expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.height(100.dp),
-            ) {
-                ids.forEach { label ->
-                    DropdownMenuItem(text = { Text(label, textAlign = TextAlign.Center) }, onClick = {
-                        vorgangsId = label
-                        expanded = false
-                    })
+                // Das Menü
+                ExposedDropdownMenu(
+                    expanded = expanded, onDismissRequest = { expanded = false }, modifier = Modifier.height(100.dp),
+                ) {
+                    ids.forEach { label ->
+                        DropdownMenuItem(text = { Text(label, textAlign = TextAlign.Center) }, onClick = {
+                            initialJiraID = label
+                            expanded = false
+                        })
+                    }
                 }
             }
+        } else {
+            // No suggestions available - show plain text field for manual entry
+            OutlinedTextField(
+                value = initialJiraID,
+                onValueChange = {initialJiraID = it},
+                label = { Text("Vorgangs-ID") },
+                modifier = Modifier.fillMaxWidth()
+            )
         }
 
         Spacer(Modifier.height(8.dp))
 
         OutlinedTextField(
-            value = beschreibung,
-            onValueChange = { beschreibung = it },
+            value = initialDesc,
+            onValueChange = { initialDesc = it },
             label = { Text("Vorgangs-Beschreibung") },
             modifier = Modifier.fillMaxWidth()
         )
@@ -100,28 +109,28 @@ fun Body(timeTable: TimeTable) {
                 })
 
             OutlinedTextField(
-                value = startzeit, onValueChange = {
-                startzeit = it
-                if (endzeit.isNotEmpty()) berechneDauer()
+                value = initialStart, onValueChange = {
+                initialStart = it
+                if (initialEnd.isNotEmpty()) berechneDauer()
             }, label = { Text("Startzeit") }, modifier = Modifier.weight(1f), placeholder = { Text("HH:mm") }
             )
 
             OutlinedTextField(
-                value = endzeit, onValueChange = {
-                endzeit = it
-                if (startzeit.isNotEmpty()) berechneDauer()
+                value = initialEnd, onValueChange = {
+                initialEnd = it
+                if (initialStart.isNotEmpty()) berechneDauer()
             }, label = { Text("Endzeit") }, modifier = Modifier.weight(1f), placeholder = { Text("HH:mm") }
             )
             OutlinedTextField(
-                value = dauer,
+                value = duration,
                 onValueChange = {
-                    dauer = it
+                    duration = it
                     val timeRegex = Regex("^([01]\\d|2[0-3]):([0-5]\\d)$")
-                    if (timeRegex.matches(dauer)){
-                        if (startzeit.isNotEmpty()) {
-                            endzeit = calcEndTime(dauer, startzeit)
-                        } else if (endzeit.isNotEmpty()) {
-                            startzeit = calcStartTime(dauer, endzeit)
+                    if (timeRegex.matches(duration)){
+                        if (initialStart.isNotEmpty()) {
+                            initialEnd = calcEndTime(duration, initialStart)
+                        } else if (initialEnd.isNotEmpty()) {
+                            initialStart = calcStartTime(duration, initialEnd)
                         }
                     }
                  },
@@ -138,9 +147,9 @@ fun Body(timeTable: TimeTable) {
                 var task: Task? = null
                 try {
                     task = Task(
-                        initialDate = LocalDate.parse(date), initialId = vorgangsId, initialDesc = beschreibung
+                        initialDate = LocalDate.parse(date), initialId = initialJiraID, initialDesc = initialDesc
                     )
-                    task.addTime(startzeit, endzeit)
+                    task.addTime(initialStart, initialEnd)
                 } catch (e: Exception) {
                     SnackbarManager.showMessage("Fehler beim Erstellen der Aufgabe: ${e.message}")
                     return@Button
@@ -157,16 +166,16 @@ fun Body(timeTable: TimeTable) {
 }
 
 private fun calcStartTime(duration: String, end:String): String {
-    var endTime = LocalTime.parse(end)
-    var durationTime = LocalTime.parse(duration)
-    var startTime = endTime.minusHours(durationTime.hour.toLong()).minusMinutes(durationTime.minute.toLong())
+    val endTime = LocalTime.parse(end)
+    val durationTime = LocalTime.parse(duration)
+    val startTime = endTime.minusHours(durationTime.hour.toLong()).minusMinutes(durationTime.minute.toLong())
     return startTime.toString()
 }
 
 private fun calcEndTime(duration: String, start:String): String {
-    var startTime = LocalTime.parse(start)
-    var durationTime = LocalTime.parse(duration)
-    var endTime = startTime.plusHours(durationTime.hour.toLong()).plusMinutes(durationTime.minute.toLong())
+    val startTime = LocalTime.parse(start)
+    val durationTime = LocalTime.parse(duration)
+    val endTime = startTime.plusHours(durationTime.hour.toLong()).plusMinutes(durationTime.minute.toLong())
     return endTime.toString()
 }
 
