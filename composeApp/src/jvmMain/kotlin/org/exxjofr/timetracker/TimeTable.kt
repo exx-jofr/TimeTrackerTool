@@ -19,11 +19,13 @@ class TimeTable(path: String) {
         val existingTasks = getAllTasks()
 
         val insertIndex = existingTasks.indexOfFirst { task.isAfter(it) }
-        if (insertIndex != -1 && existingTasks.isNotEmpty()) {
+        if (insertIndex == -1) {
+            // No position found - append at the end
             LOGGER.info("Appending task at the end of the file.")
             file.appendText("\n${task}")
             linesCsv.add(task.toString())
         } else {
+            // Position found - insert at that index
             insertLineAt(insertIndex, task.toString())
             LOGGER.info("Inserted task at line ${insertIndex}.")
         }

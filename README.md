@@ -10,16 +10,14 @@ A modern desktop time tracking application built with **Kotlin Multiplatform** a
 2. [Features](#features)
 3. [Technology Stack](#technology-stack)
 4. [Project Structure](#project-structure)
-5. [Prerequisites](#prerequisites)
-6. [Installation & Setup](#installation--setup)
-7. [Build & Run](#build--run)
-8. [Building for Distribution](#building-for-distribution)
-9. [Configuration & Settings](#configuration--settings)
-10. [Key Components](#key-components)
-11. [Architecture](#architecture)
-12. [Development Guide](#development-guide)
-13. [Contributing](#contributing)
-14. [License](#license)
+5. [Installation & Setup](#installation--setup)
+6. [Build & Run](#build--run)
+7. [Building for Distribution](#building-for-distribution)
+8. [Configuration & Settings](#configuration--settings)
+9. [Key Components](#key-components)
+10. [Development Guide](#development-guide)
+11. [Contributing](#contributing)
+12. [License](#license)
 
 ---
 
@@ -57,14 +55,8 @@ A modern desktop time tracking application built with **Kotlin Multiplatform** a
 - **Kotlinx Coroutines**: 1.10.2 - Asynchronous programming with Swing support
 
 ### Data Handling & Export
-- **Apache POI**: 5.5.0 - Excel file generation (OOXML format)
-- **DataStore Preferences**: 1.2.0 - Encrypted local data storage
-- **Log4j**: 2.25.2 - Logging framework (API + Core)
-
-### Build System
-- **Gradle**: 8.x with Kotlin DSL (build.gradle.kts)
-- **Compose Hot Reload**: 1.0.0-rc02 - Development time reload
-- **Lifecycle ViewModel & Runtime Compose**: 2.9.5 - State management
+- **Apache POI**: 5.5.0 - Excel file manipulation (OOXML format)
+- **DataStore Preferences**: 1.2.0 - Local data storage
 
 ---
 
@@ -287,18 +279,18 @@ Settings are persisted using DataStore in encrypted format at:
 
 ### UI Components (in `components/` folder)
 
-| Component | Purpose |
-|-----------|---------|
-| **App.kt** | Main application structure and layout |
-| **Body.kt** | Primary content/body area |
-| **TableScreen.kt** | Time table display and interaction |
-| **Settings.kt** | User settings and configuration UI |
-| **Help.kt** | Help documentation and user guide |
-| **Navigationsbar.kt** | Top navigation bar |
-| **SideMenu.kt** | Side navigation menu |
-| **DatePickerDocked.kt** | Date selection widget |
-| **Tray.kt** | System tray integration |
-| **SnackBarManager.kt** | Toast/notification system |
+| Component               | Purpose                               |
+|-------------------------|---------------------------------------|
+| **App.kt**              | Main application structure and layout |
+| **Body.kt**             | Primary content/body area             |
+| **TableScreen.kt**      | Time table display and interaction    |
+| **Settings.kt**         | User settings and configuration UI    |
+| **Help.kt**             | Help documentation and user guide     |
+| **Navigationsbar.kt**   | Top navigation bar                    |
+| **SideMenu.kt**         | Side navigation menu                  |
+| **DatePickerDocked.kt** | Date selection widget                 |
+| **Tray.kt**             | System tray integration               |
+| **SnackBarManager.kt**  | Toast/notification system             |
 
 ### ViewModel Layer
 
@@ -306,45 +298,6 @@ Settings are persisted using DataStore in encrypted format at:
 - MVVM pattern implementation
 - Manages settings state
 - Reactive state updates for UI
-
----
-
-## Architecture
-
-### Pattern: MVVM (Model-View-ViewModel)
-
-```
-┌─────────────────┐
-│      UI Layer   │  (Compose Components)
-│   (View)        │
-└────────┬────────┘
-         │ Observes
-         │
-┌────────▼────────┐
-│   ViewModel     │  (SettingsModel, etc.)
-│   Layer         │
-└────────┬────────┘
-         │ Uses
-         │
-┌────────▼────────┐
-│   Data Layer    │  (Models, Repositories)
-│   (Model)       │
-└─────────────────┘
-```
-
-### Data Flow
-
-1. **User Interaction** → UI Component triggers action
-2. **ViewModel Updates** → State changes propagate
-3. **Repository Operations** → Data persistence/retrieval
-4. **UI Recomposition** → Compose re-renders affected UI
-
-### Platform-Specific Code
-
-Platform-specific implementation is organized in:
-- `jvmMain/kotlin` - Desktop/JVM specific code
-- Uses `Platform.kt` for platform detection and abstraction
-- Enables future multiplatform expansion (iOS, Android, Web)
 
 ---
 

@@ -73,23 +73,7 @@ A: Nein, man ist dafür verantwortlich, dass die Zeiten sich nicht überschneide
         HelpSection(
             title = "4. Coding Hinweise für Entwickler",
             content = """
-Falls du die Anwendung erweitern oder anpassen möchtest, beachte folgende Punkte:
-
-Architecture:
-• Das Projekt folgt der MVVM-Architektur (Model-View-ViewModel)
-• Verwende Compose für die UI-Schicht
-• Nutze Coroutines für asynchrone Operationen
-
-Best Practices:
-• Schreibe wiederverwendbare Composable-Funktionen
-• Nutze State Management für reaktive Updates
-• Implementiere Fehlerbehandlung bei Datenbankoperationen
-• Schreibe Tests für kritische Funktionen
-
-Performance:
-• Vermeide unnötige Recompositions
-• Nutze remember{} für State-Speicherung
-• Optimiere Listenrendering mit LazyColumn
+Schau in die ReadME.md für eine ausführliche Anleitung zur Entwicklung und zum Beitrag zu diesem Projekt.
 
 Wichtig: Dokumentiere deine Code-Änderungen und erstelle einen Pull Request 
 für Code-Reviews!

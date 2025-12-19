@@ -9,6 +9,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,23 +29,41 @@ private val logger = LogManager.getLogger("App")
 @Composable
 fun App(model: SettingsModel) {
     var currentScreen by remember { mutableStateOf("main") }
-    var checkedPathCsv by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
-    // 🆕 DataStore für Desktop erstellen
-
+    // Load settings from DataStore
     val pathCsv by model.pathFileCsv.collectAsState(initial = "")
     val pathExcel by model.pathFileExcel.collectAsState(initial = "")
     val username by model.username.collectAsState(initial = "")
     val apiKey by model.apiKey.collectAsState(initial = "")
 
-    if (pathCsv.isNotEmpty()) {
-        checkedPathCsv = true
+    // Only try to load TimeTable if a valid CSV path is set and file exists
+    val timeTable by remember(pathCsv) {
+        mutableStateOf(
+            if (pathCsv.isNotEmpty()) {
+                val csvDirectory = java.io.File(pathCsv)
+                // pathCsv is a directory, construct the full file path
+                val year = java.time.LocalDate.now().year
+                val csvFile = java.io.File("$pathCsv/timetracker_$year.csv")
+
+                if (csvDirectory.exists() && csvDirectory.isDirectory && csvFile.exists() && csvFile.isFile) {
+                    try {
+                        TimeTable("$pathCsv/timetracker_$year.csv")
+                    } catch (e: Exception) {
+                        logger.error("Error loading TimeTable from path: $pathCsv", e)
+                        null
+                    }
+                } else {
+                    null
+                }
+            } else {
+                null
+            }
+        )
     }
 
-    val timeTable by remember(checkedPathCsv, pathCsv) {
-        mutableStateOf(if (checkedPathCsv) TimeTable(pathCsv) else null)
-    }
+    // Check if CSV path is valid and TimeTable loaded successfully
+    val csvPathValid = pathCsv.isNotEmpty() && timeTable != null
 
     Scaffold(
         topBar = { SideMenu(
@@ -83,8 +103,21 @@ fun App(model: SettingsModel) {
                 ) {
                     when (currentScreen) {
                         "main" -> {
-                            if (checkedPathCsv && timeTable != null) {
+                            if (csvPathValid && timeTable != null) {
                                 Body(timeTable = timeTable!!)
+                            } else {
+                                // Show helpful message when no CSV path is configured
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Bitte konfigurieren Sie zuerst einen CSV-Dateipfad", style = MaterialTheme.typography.headlineSmall)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(onClick = { currentScreen = "settings" }) {
+                                        Text("Zu den Einstellungen")
+                                    }
+                                }
                             }
                         }
 
@@ -98,9 +131,22 @@ fun App(model: SettingsModel) {
                         }
 
                         "overview" -> {
-                            if (checkedPathCsv && timeTable != null) {
+                            if (csvPathValid && timeTable != null) {
                                 TableScreen(timeTable = timeTable!!, pathExcel = pathExcel, userName= username,
                                     apiKey = apiKey)
+                            } else {
+                                // Show helpful message when no CSV path is configured
+                                Column(
+                                    modifier = Modifier.fillMaxSize(),
+                                    verticalArrangement = Arrangement.Center,
+                                    horizontalAlignment = Alignment.CenterHorizontally
+                                ) {
+                                    Text("Bitte konfigurieren Sie zuerst einen CSV-Dateipfad", style = MaterialTheme.typography.headlineSmall)
+                                    Spacer(modifier = Modifier.height(16.dp))
+                                    Button(onClick = { currentScreen = "settings" }) {
+                                        Text("Zu den Einstellungen")
+                                    }
+                                }
                             }
                         }
 

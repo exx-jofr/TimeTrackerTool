@@ -72,13 +72,44 @@ fun Settings(viewModel: SettingsModel, onNavigateTo: (String) -> Unit) {
                 if (saveUserName(userVar) && saveApiKey(apiKeyVar)) {
                     SnackbarManager.showMessage("Einstellungen werden gespeichert...")
                     coroutineScope.launch {
+                        // Validate that the CSV directory path exists
+                        if (pathCsv.isEmpty()) {
+                            SnackbarManager.showMessage("CSV-Dateipfad darf nicht leer sein!")
+                            return@launch
+                        }
+
+                        val csvDirectory = File(pathCsv)
+
+                        // Check if it's a directory and exists
+                        if (!csvDirectory.exists()) {
+                            SnackbarManager.showMessage("Das Verzeichnis existiert nicht: $pathCsv")
+                            return@launch
+                        }
+
+                        if (!csvDirectory.isDirectory) {
+                            SnackbarManager.showMessage("Der Pfad ist kein Verzeichnis: $pathCsv")
+                            return@launch
+                        }
+
+                        // Check if the CSV file already exists in this directory
+                        val year = java.time.LocalDate.now().year
+                        val csvFile = File("$pathCsv/timetracker_$year.csv")
+                        val isNewFile = !csvFile.exists()
+
+                        // Only create file if it doesn't exist yet
+                        if (isNewFile) {
+                            TimeTable.createFile(pathCsv)
+                            SnackbarManager.showMessage("CSV-Datei erstellt: ${csvFile.absolutePath}")
+                        } else {
+                            SnackbarManager.showMessage("CSV-Datei bereits vorhanden: ${csvFile.absolutePath}")
+                        }
+
                         viewModel.saveAll(
                             pathCsv,
                             pathExcelVar,
                             apiKeyVar,
                             userVar
                         )
-                        saveCSV(pathCsv)
                         onNavigateTo("main")
                     }
                 }
@@ -89,6 +120,7 @@ fun Settings(viewModel: SettingsModel, onNavigateTo: (String) -> Unit) {
         Button(
             onClick = {
                 File("settings.preferences_pb").delete()
+                SnackbarManager.showMessage("Einstellungen zurückgesetzt. Bitte Anwendung neu starten.")
             }
         ) {
             Text("Zurücksetzen der Einstellungen")
@@ -96,12 +128,6 @@ fun Settings(viewModel: SettingsModel, onNavigateTo: (String) -> Unit) {
     }
 }
 
-private fun saveCSV(pathFile: String) {
-    if (pathFile.isNotEmpty()) {
-        print("Speicherort gespeichert: $pathFile")
-        TimeTable.createFile(pathFile)
-    }
-}
 
 private fun saveUserName(user: String): Boolean {
     if (user.isNotEmpty()) {
