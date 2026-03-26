@@ -41,10 +41,18 @@ compose.desktop {
     application {
         mainClass = "org.exxjofr.timetracker.MainKt"
 
+        jvmArgs += listOf(
+            "--add-opens", "java.base/sun.misc=ALL-UNNAMED",
+            "--add-opens", "java.base/java.lang=ALL-UNNAMED",
+            "--add-opens", "java.base/java.nio=ALL-UNNAMED",
+        )
+
         nativeDistributions {
             targetFormats(TargetFormat.Msi, TargetFormat.Exe)
             packageName = "TimeTracker"
             packageVersion = "1.0.0"
+
+            modules("jdk.unsupported")
 
             windows {
                 menuGroup = "TimeTracker"
